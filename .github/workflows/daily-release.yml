@@ -1,0 +1,44 @@
+name: All Releases
+
+on:
+  schedule:
+    # 00:17 UTC = 08:17 Asia/Shanghai, every day.
+    - cron: '17 0 * * *'
+  workflow_dispatch:
+    inputs:
+      deployment-mode:
+        description: Deployment mode (repository-default reads .github/release-settings.psd1)
+        type: choice
+        default: repository-default
+        options:
+          - repository-default
+          - self-contained
+          - framework-dependent
+          - both
+
+permissions:
+  contents: read
+
+concurrency:
+  # Distinct from child locks so a parent never waits on its own concurrency group.
+  group: all-releases
+  cancel-in-progress: false
+
+jobs:
+  nightly:
+    name: Nightly release
+    if: github.repository == '1609676823/RemoteHubStudio' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    permissions:
+      contents: write
+    uses: ./.github/workflows/nightly-release.yml
+    with:
+      deployment-mode: ${{ inputs.deployment-mode || 'repository-default' }}
+
+  stable:
+    name: Stable release if needed
+    if: github.repository == '1609676823/RemoteHubStudio' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      deployment-mode: ${{ inputs.deployment-mode || 'repository-default' }}

@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="RemoteHubStudio/RemoteHubStudio.csproj" />
+  <Folder Name="/解决方案项/">
+    <File Path="Directory.Build.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="RemoteHubStudio.Tests/RemoteHubStudio.Tests.csproj" />
+</Solution>

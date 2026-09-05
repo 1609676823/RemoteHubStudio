@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://remotehubstudio.local/schemas/language-pack.schema.json",
+  "title": "RemoteHubStudio language pack",
+  "description": "Schema version 1 for a RemoteHubStudio JSON language pack.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "locale",
+    "name",
+    "nativeName",
+    "strings"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "maxLength": 2048
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "locale": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$",
+      "description": "A .NET-recognized BCP-47 locale that matches the JSON filename."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Language name in English."
+    },
+    "nativeName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Language name written in that language."
+    },
+    "authors": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "description": "Optional translator credits."
+    },
+    "strings": {
+      "type": "object",
+      "maxProperties": 5000,
+      "propertyNames": {
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 4096
+      }
+    }
+  }
+}

@@ -1,0 +1,155 @@
+name: Build Release Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Package channel (build and test only; does not publish)
+        required: true
+        type: choice
+        default: nightly
+        options:
+          - nightly
+          - stable
+      deployment-mode:
+        description: Deployment mode (repository-default reads .github/release-settings.psd1)
+        type: choice
+        default: repository-default
+        options:
+          - repository-default
+          - self-contained
+          - framework-dependent
+          - both
+  workflow_call:
+    inputs:
+      channel:
+        description: Release channel (nightly or stable)
+        required: true
+        type: string
+      deployment-mode:
+        description: self-contained, framework-dependent, both, or repository-default
+        type: string
+        default: repository-default
+      source-ref:
+        description: Exact source commit selected by the release workflow
+        required: false
+        type: string
+        default: ''
+      expected-tag:
+        description: Require the checked-out version to match this tag
+        required: false
+        type: string
+        default: ''
+    outputs:
+      tag:
+        value: ${{ jobs.build.outputs.tag }}
+      commit:
+        value: ${{ jobs.build.outputs.commit }}
+      artifact-id:
+        value: ${{ jobs.build.outputs.artifact-id }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Test and package Windows x86, x64, ARM64, and portable
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      RELEASE_CHANNEL: ${{ inputs.channel }}
+      EXPECTED_RELEASE_TAG: ${{ inputs.expected-tag }}
+      DEPLOYMENT_MODE: ${{ inputs.deployment-mode || 'repository-default' }}
+    outputs:
+      tag: ${{ steps.metadata.outputs.tag }}
+      commit: ${{ steps.metadata.outputs.commit }}
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source-ref || github.sha }}
+          persist-credentials: false
+
+      - name: Check out current packaging scripts and settings
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # A stable source tag may predate this packaging configuration.
+          ref: ${{ github.sha }}
+          path: artifacts/release-tools
+          sparse-checkout: .github
+          persist-credentials: false
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Prepare release metadata
+        id: metadata
+        run: |
+          $props = [xml](Get-Content -LiteralPath Directory.Build.props -Raw)
+          $configuredVersion = [string]$props.Project.PropertyGroup.Version
+          $baseVersion = $configuredVersion -replace '[-+].*$', ''
+          if ($baseVersion -notmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') {
+            throw 'Directory.Build.props must contain a three-part semantic version.'
+          }
+          switch ($env:RELEASE_CHANNEL) {
+            'nightly' {
+              $tag = "v$baseVersion-nightly"
+              $version = "$baseVersion-nightly.$env:GITHUB_RUN_NUMBER.$env:GITHUB_RUN_ATTEMPT"
+            }
+            'stable' {
+              $tag = "v$baseVersion"
+              if ($configuredVersion -ne $baseVersion) {
+                throw 'Stable releases require a plain X.Y.Z Version in Directory.Build.props.'
+              }
+              if ($env:GITHUB_REF.StartsWith('refs/tags/') -and $env:GITHUB_REF -ne "refs/tags/$tag") {
+                throw 'The requested stable tag must match Version in Directory.Build.props exactly.'
+              }
+              $version = $baseVersion
+            }
+            default { throw "Unknown release channel: $env:RELEASE_CHANNEL" }
+          }
+          if ($env:EXPECTED_RELEASE_TAG -and $tag -ne $env:EXPECTED_RELEASE_TAG) {
+            throw 'The selected source commit has a different version from the requested release.'
+          }
+          $commit = git rev-parse HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot determine the source commit.' }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "commit=$commit" >> $env:GITHUB_OUTPUT
+          "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
+          "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+          "RELEASE_COMMIT=$commit" >> $env:GITHUB_ENV
+
+      - name: Restore dependencies
+        run: dotnet restore RemoteHubStudio.slnx
+
+      - name: Build Release
+        run: dotnet build RemoteHubStudio.slnx -c Release --no-restore -p:Version=$env:RELEASE_VERSION -p:ContinuousIntegrationBuild=true
+
+      - name: Run regression tests
+        # This repository uses a console test suite, not dotnet test.
+        run: dotnet run --project RemoteHubStudio.Tests/RemoteHubStudio.Tests.csproj -c Release --no-build --no-restore
+
+      - name: Publish and package every configured target
+        run: |
+          ./artifacts/release-tools/.github/scripts/package-release.ps1 -DeploymentMode $env:DEPLOYMENT_MODE -ReleaseTag $env:RELEASE_TAG -Version $env:RELEASE_VERSION -Channel $env:RELEASE_CHANNEL -SourceCommit $env:RELEASE_COMMIT
+
+      - name: Upload release files
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-${{ inputs.channel }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/packages/*.zip
+            artifacts/packages/SHA256SUMS.txt
+            artifacts/packages/release-notes.md
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7

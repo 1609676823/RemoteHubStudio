@@ -1,0 +1,65 @@
+name: Nightly Release
+
+on:
+  workflow_call:
+    inputs:
+      deployment-mode:
+        type: string
+        default: repository-default
+  workflow_dispatch:
+    inputs:
+      deployment-mode:
+        description: Deployment mode (portable DLLs always require the Desktop Runtime)
+        type: choice
+        default: repository-default
+        options:
+          - repository-default
+          - self-contained
+          - framework-dependent
+          - both
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == '1609676823/RemoteHubStudio' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    uses: ./.github/workflows/build-release.yml
+    with:
+      channel: nightly
+      deployment-mode: ${{ inputs.deployment-mode || 'repository-default' }}
+
+  release:
+    name: Update versioned nightly
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Check out publishing script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.build.outputs.commit }}
+          persist-credentials: false
+
+      - name: Download tested release files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          path: artifacts
+          merge-multiple: true
+
+      - name: Update prerelease, assets, and tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_CHANNEL: nightly
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          RELEASE_COMMIT: ${{ needs.build.outputs.commit }}
+        run: bash .github/scripts/publish-release.sh

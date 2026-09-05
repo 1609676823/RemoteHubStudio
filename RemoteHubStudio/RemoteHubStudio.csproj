@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>RemoteHubStudio</AssemblyName>
+    <RootNamespace>RemoteHubStudio</RootNamespace>
+    <OutputType>WinExe</OutputType>
+    <!-- windows7.0 describes the compile-time Windows API surface, not .NET 10's supported OS list.
+         发布模式与 Windows 支持范围见 docs/DEPLOYMENT.zh-CN.md；WinForms 不能通过切换 RID 跨系统运行。 -->
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationIcon>Assets\remotehubstudio.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AntdUI" Version="2.4.8" />
+    <EmbeddedResource Include="Assets\*.ico;Assets\*.svg" />
+    <InternalsVisibleTo Include="RemoteHubStudio.Tests" />
+  </ItemGroup>
+
+  <!--
+    Keep WinForms designer identity and file relationships in source control instead of
+    relying on Visual Studio's ignored, per-user .csproj.user inference.
+  -->
+  <ItemGroup>
+    <Compile Update="UI\Controls\ResponsiveDialogWindow.cs;UI\Dialogs\*Form.cs;UI\Main\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UI\Dialogs\ConnectionEditors\ConnectionEndpointEditor.cs;UI\Dialogs\ConnectionEditors\*ConnectionTypeOptionsPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="UI\Controls\PasswordInput.cs;UI\Controls\ResponsiveFieldGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="UI\Controls\ResponsiveDialogWindow.Designer.cs;UI\Dialogs\*Form.Designer.cs;UI\Dialogs\ConnectionEditors\ConnectionEndpointEditor.Designer.cs;UI\Dialogs\ConnectionEditors\*ConnectionTypeOptionsPage.Designer.cs;UI\Main\MainForm.Designer.cs">
+      <DependentUpon>$([System.String]::Copy('%(Filename)').Replace('.Designer', '')).cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="UI\Controls\ResponsiveDialogWindow.resx;UI\Dialogs\*Form.resx;UI\Dialogs\ConnectionEditors\ConnectionEndpointEditor.resx;UI\Dialogs\ConnectionEditors\*ConnectionTypeOptionsPage.resx;UI\Main\MainForm.resx">
+      <DependentUpon>%(Filename).cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\LICENSE.txt" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Languages\**\*" />
+    <!-- Embed every source language pack so newly contributed locales also work in the out-of-process WinForms designer. -->
+    <EmbeddedResource Include="Languages\*.json" Exclude="Languages\*.schema.json" />
+    <Content Include="Languages\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
