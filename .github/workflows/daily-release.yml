@@ -1,0 +1,40 @@
+name: Daily Releases (Scheduled)
+
+on:
+  # 唯一定时入口；手动运行请使用 all-releases.yml，便于分别查看运行记录。
+  # GitHub 只会从默认分支加载定时任务，修改后需推送到默认分支才会生效。
+  schedule:
+    # cron 默认使用 UTC：每天北京时间（Asia/Shanghai，UTC+8）00:00 = 前一天 16:00 UTC。
+    # 按需求设为零点整；GitHub 高负载时可能延迟调度，不保证准点开始执行。
+    - cron: '0 16 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  # 与手动总任务共用锁，避免两次总发布重叠；保留已经开始的发布。
+  # 此锁必须与 nightly-release / stable-release 子任务锁不同，避免相互等待。
+  group: all-releases
+  cancel-in-progress: false
+
+jobs:
+  # 两个发布任务没有 needs 依赖，独立并行；与手动入口复用相同的发布实现。
+  nightly:
+    name: Nightly release
+    if: github.repository == '1609676823/RemoteHubStudio' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    permissions:
+      contents: write
+    uses: ./.github/workflows/nightly-release.yml
+    with:
+      # 定时事件没有手动输入，始终读取版本控制中的 release-settings.psd1。
+      deployment-mode: repository-default
+
+  stable:
+    name: Stable release if needed
+    if: github.repository == '1609676823/RemoteHubStudio' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      # 正式版是否需要发布由子工作流判断，已发布版本会跳过构建和附件更新。
+      deployment-mode: repository-default

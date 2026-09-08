@@ -1,0 +1,76 @@
+name: Force Build and Release (Manual)
+run-name: Force build and release (${{ inputs.channel }}, ${{ inputs.deployment-mode }}) by @${{ github.actor }}
+
+on:
+  # 专用手动入口：Actions -> Force Build and Release (Manual) -> Run workflow。
+  # 不配置 schedule、push 或 workflow_call，避免定时任务或发布流程自动调用。
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Channels to rebuild and publish (replaces existing assets and updates tags)
+        required: true
+        type: choice
+        default: both
+        options:
+          - both
+          - nightly
+          - stable
+      deployment-mode:
+        description: Deployment mode (repository-default reads .github/release-settings.psd1)
+        type: choice
+        default: repository-default
+        options:
+          - repository-default
+          - self-contained
+          - framework-dependent
+          - both
+
+# 默认只读；调用发布子工作流的两个任务单独授予写权限。
+permissions:
+  contents: read
+
+concurrency:
+  # 与普通总发布共用父锁；子工作流另有渠道锁，覆盖整个构建和发布过程。
+  group: all-releases
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate publication source
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      # 发布使用主仓库默认分支；误选其他分支时明确失败，避免全部跳过却显示成功。
+      - name: Require the repository default branch
+        shell: bash
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [[ "$GITHUB_REPOSITORY" != '1609676823/RemoteHubStudio' || "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]]; then
+            echo "::error::Force publication requires the default branch of 1609676823/RemoteHubStudio. Select $DEFAULT_BRANCH in Run workflow."
+            exit 1
+          fi
+
+  # 预览版本来就每次重新构建，直接复用完整发布流程，确保实际更新 Release 附件。
+  nightly:
+    name: Rebuild and publish nightly
+    needs: validate
+    if: inputs.channel == 'both' || inputs.channel == 'nightly'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/nightly-release.yml
+    with:
+      deployment-mode: ${{ inputs.deployment-mode }}
+
+  stable:
+    name: Rebuild and replace stable release
+    needs: validate
+    if: inputs.channel == 'both' || inputs.channel == 'stable'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      deployment-mode: ${{ inputs.deployment-mode }}
+      # 仅此手动入口允许覆盖已发布的正式版，并将标签同步到本次测试通过的源码提交。
+      # stable 仍要求源码 Version 为纯 X.Y.Z；预发布版本请只选择 nightly。
+      force-release: true
