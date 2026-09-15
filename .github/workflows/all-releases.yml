@@ -1,0 +1,45 @@
+name: All Releases (Manual)
+
+on:
+  # 独立手动入口：Actions -> All Releases (Manual) -> Run workflow。
+  # 定时入口放在 daily-release.yml，两者只负责触发和传参，共用发布子工作流。
+  workflow_dispatch:
+    inputs:
+      deployment-mode:
+        description: Deployment mode (repository-default reads .github/release-settings.psd1)
+        type: choice
+        default: repository-default
+        options:
+          - repository-default
+          - self-contained
+          - framework-dependent
+          - both
+
+permissions:
+  contents: read
+
+concurrency:
+  # 与定时总任务共用锁，避免同时发布；不能与子工作流的并发锁同名。
+  group: all-releases
+  cancel-in-progress: false
+
+jobs:
+  # 仅允许主仓库的默认分支发布；两个子任务独立并行，失败互不阻断。
+  nightly:
+    name: Nightly release
+    if: github.repository == '1609676823/RemoteHubStudio' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    permissions:
+      # 调用方需允许写入 Release，子工作流无法自行提升 GITHUB_TOKEN 权限。
+      contents: write
+    uses: ./.github/workflows/nightly-release.yml
+    with:
+      deployment-mode: ${{ inputs.deployment-mode }}
+
+  stable:
+    name: Stable release if needed
+    if: github.repository == '1609676823/RemoteHubStudio' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      deployment-mode: ${{ inputs.deployment-mode }}
