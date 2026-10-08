@@ -73,13 +73,13 @@ RID 区分的是系统和 CPU，不需要为 Windows 10、11 各生成一套相�
 
 ## 文件名称、更新与已有版本
 
-以 `v0.1.0-nightly` 为例：
+以 `v0.1.1-nightly` 为例：
 
 ```text
-RemoteHubStudio-v0.1.0-nightly-win-x86-self-contained.zip
-RemoteHubStudio-v0.1.0-nightly-win-x64-self-contained.zip
-RemoteHubStudio-v0.1.0-nightly-win-arm64-self-contained.zip
-RemoteHubStudio-v0.1.0-nightly-win-portable-framework-dependent.zip
+RemoteHubStudio-v0.1.1-nightly-win-x86-self-contained.zip
+RemoteHubStudio-v0.1.1-nightly-win-x64-self-contained.zip
+RemoteHubStudio-v0.1.1-nightly-win-arm64-self-contained.zip
+RemoteHubStudio-v0.1.1-nightly-win-portable-framework-dependent.zip
 SHA256SUMS.txt
 ```
 
@@ -88,7 +88,7 @@ SHA256SUMS.txt
 所有自动、手动和强制任务生成的正式版、预览版 ZIP，无论架构或部署模式，内部都统一使用 `RemoteHubStudio` 顶级文件夹。压缩包文件名仍保留版本、架构和部署模式。解压后进入 `RemoteHubStudio` 文件夹，再启动 EXE；可移植包也可使用 CMD。升级时先退出程序，将新包中的文件覆盖到本地软件目录，并保留 `data` 用户数据目录。例如：
 
 ```text
-RemoteHubStudio-v0.1.0-nightly-win-x64-self-contained.zip
+RemoteHubStudio-v0.1.1-nightly-win-x64-self-contained.zip
 └── RemoteHubStudio/
     ├── RemoteHubStudio.exe
     ├── RemoteHubStudio.dll
@@ -107,7 +107,7 @@ RemoteHubStudio-v0.1.0-nightly-win-x64-self-contained.zip
 
 ```powershell
 dotnet run --project .\RemoteHubStudio.Tests\RemoteHubStudio.Tests.csproj -c Release
-.\.github\scripts\package-release.ps1 -DeploymentMode both -ReleaseTag v0.1.0-nightly -Version 0.1.0-nightly.1.1 -Channel nightly -SourceCommit (git rev-parse HEAD) -OutputDirectory artifacts/local-packages
+.\.github\scripts\package-release.ps1 -DeploymentMode both -ReleaseTag v0.1.1-nightly -Version 0.1.1-nightly.1.1 -Channel nightly -SourceCommit (git rev-parse HEAD) -OutputDirectory artifacts/local-packages
 ```
 
 本地打包脚本只生成文件，不调用 GitHub 发布 API；建议每次验证使用新的输出目录。它会使用独立的发布子目录，并在成功后生成本次的 SHA256 清单。Windows 原生打包工具也可用，但默认 `dotnet publish` 的选项不一定与 Actions 相同，请明确指定部署模式。

@@ -424,6 +424,7 @@ public sealed partial class MainForm : AntdUI.Window
 
         _visibleRows = filtered
             .OrderByDescending(profile => profile.IsFavorite)
+            .ThenBy(profile => profile.SortOrder)
             .ThenBy(profile => profile.Name, StringComparer.CurrentCultureIgnoreCase)
             .Select(profile => CreateTableRow(profile, groupLookup, settings))
             .ToList();

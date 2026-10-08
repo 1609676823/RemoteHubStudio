@@ -35,6 +35,12 @@ internal static class Program
     {
         try
         {
+            if (args.FirstOrDefault() == "--connection-sort-tests")
+            {
+                await ConnectionSortOrderRegression.RunAsync();
+                ConnectionSortOrderUiRegression.Run();
+                return 0;
+            }
             if (args.FirstOrDefault() == "--connection-launch-hold-probe") return ConnectionLaunchCancellationRegression.RunHoldProbe(args);
             if (args.FirstOrDefault() == "--connection-launch-tests")
             {
@@ -82,6 +88,8 @@ internal static class Program
             TestDesignerConnectionEditors();
             DesignerSourceRegression.Run();
             TestConnectionTableSelectionBridge();
+            await ConnectionSortOrderRegression.RunAsync();
+            ConnectionSortOrderUiRegression.Run();
             AppDataPathsRegression.Run();
             TestCsvCodec();
             await TestWorkspaceJsonTransferAsync();

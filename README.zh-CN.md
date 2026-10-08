@@ -40,6 +40,7 @@ dotnet run --project .\RemoteHubStudio\RemoteHubStudio.csproj -c Release
 
 - 在一个工作区中管理连接与嵌套分组。每条连接可保存适用的用户名和密码、收藏状态、到期日、备注、私钥、程序覆盖路径、自定义参数、RDP 设置和客户端专属选项。
 - 可按名称、地址、类型或备注搜索；按客户端、分组、收藏或到期状态筛选；并可对多行执行状态检测或删除。
+- 可在连接编辑窗口设置排序号。列表按收藏优先、排序号升序、名称升序排列，支持负数；旧配置或导入文件缺少排序号时默认为 `0`，保持旧数据的默认排列方式。
 - 可新增已保存连接，也可使用“**快速连接**”而不把配置加入工作区。
 - 连接编辑器采用公共窗体外壳，并为 12 种连接类型分别提供专属选项页。协议、目标、端口、认证和高级字段会随所选客户端及模式变化。
 - 只有所选客户端模式实际使用认证信息时才显示用户名和密码字段。Radmin、RealVNC 以及 PuTTY、SecureCRT、MobaXterm 的 Telnet 模式会隐藏并清理不适用的认证值。
@@ -108,7 +109,7 @@ RustDesk 连接支持可选的自建服务器、服务器公钥和强制中继�
 - Windows Forms，目标为 `.NET 10`（`net10.0-windows7.0`）。RemoteHubStudio 仅支持 Windows；RDP 启动与可选的 DPAPI 保护依赖 Windows。
 - 使用 AntdUI `2.4.8`，支持跟随系统、浅色与深色主题。
 - 使用 Per-Monitor V2 高 DPI 模式；对话框和字段网格会根据可用宽度调整列数与滚动区域。
-- 公共连接窗体仅包含名称、客户端、分组、到期日、收藏状态和备注。每个客户端分别由一个 `ConnectionTypeOptionsPage` 子类管理其协议或模式、连接目标、认证和专属设置。RDP、ToDesk 等固定单协议客户端不会重复显示协议选择器。
+- 公共连接窗体仅包含名称、客户端、分组、到期日、收藏状态、排序号和备注。每个客户端分别由一个 `ConnectionTypeOptionsPage` 子类管理其协议或模式、连接目标、认证和专属设置。RDP、ToDesk 等固定单协议客户端不会重复显示协议选择器。
 
 源代码按职责组织：
 
@@ -211,7 +212,7 @@ dotnet run --project .\RemoteHubStudio.Tests\RemoteHubStudio.Tests.csproj -c Rel
 | 定时总任务 | [Daily Releases (Scheduled)](.github/workflows/daily-release.yml) | 每天北京时间 **00:00**（前一天 **16:00 UTC**） | 使用仓库默认配置，同时运行以下两个发布子任务 |
 | 手动总任务 | [All Releases (Manual)](.github/workflows/all-releases.yml) | 手动 | 使用所选部署模式，同时运行以下两个发布子任务 |
 | 强制构建并发布 | [Force Build and Release (Manual)](.github/workflows/force-build.yml) | 仅手动，可选 `nightly`、`stable` 或 `both`（默认） | 重新构建默认分支，替换 Release 附件、构建说明及源码标签，包含已发布的正式版本 |
-| 每日预览版 | [Nightly Release](.github/workflows/nightly-release.yml) | 总任务调用，或手动 | 更新 `v0.1.0-nightly` 等固定预览标签及同名附件 |
+| 每日预览版 | [Nightly Release](.github/workflows/nightly-release.yml) | 总任务调用，或手动 | 更新 `v0.1.1-nightly` 等固定预览标签及同名附件 |
 | 正式版 | [Stable Release](.github/workflows/release.yml) | 总任务调用、手动，或推送 `vX.Y.Z` 标签 | 当前版本尚未发布时构建并发布；已经发布则跳过 |
 | 仅构建与测试 | [Build Release Package](.github/workflows/build-release.yml) | 发布子任务调用，或手动选择 `nightly` / `stable` | 生成可下载的 Actions Artifact，不创建标签或 Release |
 
@@ -223,20 +224,20 @@ dotnet run --project .\RemoteHubStudio.Tests\RemoteHubStudio.Tests.csproj -c Rel
 
 所有手动入口都提供 **deployment-mode**：`repository-default`、`self-contained`、`framework-dependent`、`both`。定时任务和标签构建读取带注释的 [release-settings.psd1](.github/release-settings.psd1)，默认独立部署并附加可移植包。可移植包始终依赖框架，当前 WinForms 应用不支持 Linux/macOS。配置方法、Windows 版本边界、部署模式取舍和本地命令见 [部署文档](docs/DEPLOYMENT.zh-CN.md)。普通发布保留已有正式版附件；新架构或部署模式通过下一版本或显式手动强制发布生效。
 
-**预览版：**构建默认分支（当前为 `master`），即使没有新提交也会构建；也可在 **Actions → Nightly Release → Run workflow** 选择默认分支手动运行。基础版本取自 `Directory.Build.props` 的 `<Version>`：`0.1.0` 对应 `v0.1.0-nightly`，升级为 `0.2.0` 后自动使用 `v0.2.0-nightly`，旧版本的预览标签保留最后一次构建。
+**预览版：**构建默认分支（当前为 `master`），即使没有新提交也会构建；也可在 **Actions → Nightly Release → Run workflow** 选择默认分支手动运行。基础版本取自 `Directory.Build.props` 的 `<Version>`：`0.1.1` 对应 `v0.1.1-nightly`，升级为 `0.2.0` 后自动使用 `v0.2.0-nightly`，旧版本的预览标签保留最后一次构建。
 
-标签和附件名不带日期或构建序号。例如 `RemoteHubStudio-v0.1.0-nightly-win-x64-self-contained.zip` 的下载地址保持固定；程序内部版本仍包含运行序号和重试次数（如 `0.1.0-nightly.12.1`），发布说明记录时间、源码提交和构建链接。每次成功更新时，预览标签会移动到实际构建的提交，避免源码与二进制不一致。
+标签和附件名不带日期或构建序号。例如 `RemoteHubStudio-v0.1.1-nightly-win-x64-self-contained.zip` 的下载地址保持固定；程序内部版本仍包含运行序号和重试次数（如 `0.1.1-nightly.12.1`），发布说明记录时间、源码提交和构建链接。每次成功更新时，预览标签会移动到实际构建的提交，避免源码与二进制不一致。
 
-**普通正式发布：**定时或普通手动运行时，先读取默认分支的 `<Version>`。例如当前版本为 `0.1.0`，若 `v0.1.0` 已经公开发布，就直接跳过编译和发布，保留原版本；尚未发布则构建测试，并在成功后创建缺失的 `v0.1.0` 标签和正式 Release。若该标签已经存在但尚未发布，则构建标签指向的原始提交，不移动正式标签。版本为 `0.2.0-beta.1` 等预发布标识时跳过正式发布，仍构建预览版。上文的 Force Build and Release 是显式手动替换已有正式版的入口。
+**普通正式发布：**定时或普通手动运行时，先读取默认分支的 `<Version>`。例如当前版本为 `0.1.1`，若 `v0.1.1` 已经公开发布，就直接跳过编译和发布，保留原版本；尚未发布则构建测试，并在成功后创建缺失的 `v0.1.1` 标签和正式 Release。若该标签已经存在但尚未发布，则构建标签指向的原始提交，不移动正式标签。版本为 `0.2.0-beta.1` 等预发布标识时跳过正式发布，仍构建预览版。上文的 Force Build and Release 是显式手动替换已有正式版的入口。
 
 因此，**将 `<Version>` 升级为新的纯数字三段版本后，下一次总任务会自动发布对应正式版**。开发尚未稳定时，可以将版本设为 `0.2.0-beta.1`，准备正式发布时再改成 `0.2.0`。也仍然支持通过推送正式标签指定发布提交：
 
 ```powershell
-git tag -a v0.1.0 -m "Release 0.1.0"
-git push https://github.com/1609676823/RemoteHubStudio.git v0.1.0
+git tag -a v0.1.1 -m "Release 0.1.1"
+git push https://github.com/1609676823/RemoteHubStudio.git v0.1.1
 ```
 
-通过标签触发时，`vX.Y.Z` 必须与该提交的源码版本完全匹配；`v0.1.0-nightly` 不会触发正式发布。构建前选定的提交和版本会再次验证，避免源码、标签与二进制不一致。正式发布失败后可重跑，普通发布保留已经公开的正式版附件。准备下一版本时递增 `<Version>`，日更就会切换到新的预览标签。
+通过标签触发时，`vX.Y.Z` 必须与该提交的源码版本完全匹配；`v0.1.1-nightly` 不会触发正式发布。构建前选定的提交和版本会再次验证，避免源码、标签与二进制不一致。正式发布失败后可重跑，普通发布保留已经公开的正式版附件。准备下一版本时递增 `<Version>`，日更就会切换到新的预览标签。
 
 编译或测试失败不会修改线上版本。替换预览附件或强制替换正式版时，会暂时将 Release 设为草稿，附件和标签全部更新后再公开；若上传中途失败，该版本会保持草稿，重跑失败的发布任务即可继续。API、校验和、上传或标签更新失败都会使任务失败；不可变 Release 无法强制替换。Actions 中间产物保留 7 天，Releases 只保留每个版本最新的预览附件及各正式版。此前方案产生的日期标签不会被自动删除。
 
@@ -252,7 +253,7 @@ git push https://github.com/1609676823/RemoteHubStudio.git v0.1.0
 
 这是 .NET SDK 的标准构建配置机制：单项目可以将这些属性直接写在 `.csproj` 中，本仓库使用 MSBuild 自动导入的 `Directory.Build.props` 供应用和测试项目共享。`Program.cs` 负责启动，业务代码通过只读的 [`ProductInfo`](RemoteHubStudio/Configuration/ProductInfo.cs) 访问应用自身的程序集信息，不依赖测试程序或设计器的入口程序集。
 
-- 发布时只需修改 `<Version>`（当前为 `0.1.0`，也支持 `0.2.0-beta.1`）。SDK 自动派生数字格式的 `AssemblyVersion`、`FileVersion` 和完整的 `InformationalVersion`。“关于”显示的 `ProductInfo.Version` 保留预发布标识并省略 `+` 后的构建元数据；`ProductInfo.InformationalVersion` 保留完整版本及 SDK 附加的 Git 提交号（如有），供诊断使用。
+- 发布时只需修改 `<Version>`（当前为 `0.1.1`，也支持 `0.2.0-beta.1`）。SDK 自动派生数字格式的 `AssemblyVersion`、`FileVersion` 和完整的 `InformationalVersion`。“关于”显示的 `ProductInfo.Version` 保留预发布标识并省略 `+` 后的构建元数据；`ProductInfo.InformationalVersion` 保留完整版本及 SDK 附加的 Git 提交号（如有），供诊断使用。
 - 修改 `<RepositoryUrl>` 会同步更新默认的主页、问题跟踪、发布和许可证地址；需要独立地址时，编辑对应的 `PackageProjectUrl`、`IssuesUrl`、`PackageReleaseNotes`、`LicenseUrl` 属性。
 - 修改 `<Authors>` 会同步更新默认发布者及版权中的作者名；`Company`、`Copyright`、`Description`、`PackageLicenseExpression` 也可分别配置。SDK 生成标准特性，其余信息通过 `AssemblyMetadata` 写入程序集。
 - 设计器及语言包中的“关于”预览仅使用占位文本，真实信息在运行时填入，无需在 C# 或翻译文件中重复维护版本、版权或链接。数据目录、工作区格式和单实例标识属于兼容性常量，保留在代码中。

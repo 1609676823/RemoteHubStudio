@@ -74,6 +74,8 @@
     "ConnectionEditorForm._privateKeyInput.PlaceholderText": "Optional private-key file",
     "ConnectionEditorForm._privateKeyLabel.Text": "Private key",
     "ConnectionEditorForm._saveButton.Text": "Save",
+    "ConnectionEditorForm._sortOrderInput.AccessibleDescription": "Favorites first; lower values appear first. Negative values are allowed. Default: 0.",
+    "ConnectionEditorForm._sortOrderLabel.Text": "Sort order",
     "ConnectionEditorForm._typeLabel.Text": "Client",
     "ConnectionEditorForm._typeSelect.PlaceholderText": "Select a client",
     "ConnectionEndpoint.AccessPassword": "Access password",

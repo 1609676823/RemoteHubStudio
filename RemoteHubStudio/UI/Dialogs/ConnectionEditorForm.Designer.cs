@@ -11,6 +11,7 @@ partial class ConnectionEditorForm
     /// </summary>
     private void InitializeComponent()
     {
+        _toolTip = new ToolTip();
         _basicsSection = new AntdUI.Panel();
         _basicsTitle = new AntdUI.Label();
         _basicsGrid = new ResponsiveFieldGrid();
@@ -24,6 +25,8 @@ partial class ConnectionEditorForm
         _expiresPicker = new AntdUI.DatePicker();
         _favoriteLabel = new AntdUI.Label();
         _favoriteSwitch = new AntdUI.Switch();
+        _sortOrderLabel = new AntdUI.Label();
+        _sortOrderInput = new AntdUI.InputNumber();
         _notesLabel = new AntdUI.Label();
         _notesInput = new AntdUI.Input();
         _advancedSection = new AntdUI.Panel();
@@ -61,7 +64,7 @@ partial class ConnectionEditorForm
         _basicsSection.Name = "_basicsSection";
         _basicsSection.Padding = new Padding(8);
         _basicsSection.Radius = 10;
-        _basicsSection.Size = new Size(926, 242);
+        _basicsSection.Size = new Size(926, 290);
         _basicsSection.TabIndex = 0;
         //
         // _basicsTitle
@@ -95,18 +98,21 @@ partial class ConnectionEditorForm
         _basicsGrid.Controls.Add(_expiresPicker, 3, 1);
         _basicsGrid.Controls.Add(_favoriteLabel, 0, 2);
         _basicsGrid.Controls.Add(_favoriteSwitch, 1, 2);
-        _basicsGrid.Controls.Add(_notesLabel, 2, 2);
-        _basicsGrid.Controls.Add(_notesInput, 3, 2);
+        _basicsGrid.Controls.Add(_sortOrderLabel, 2, 2);
+        _basicsGrid.Controls.Add(_sortOrderInput, 3, 2);
+        _basicsGrid.Controls.Add(_notesLabel, 0, 3);
+        _basicsGrid.Controls.Add(_notesInput, 1, 3);
         _basicsGrid.Dock = DockStyle.Top;
         _basicsGrid.Location = new Point(8, 44);
         _basicsGrid.Margin = Padding.Empty;
         _basicsGrid.Name = "_basicsGrid";
         _basicsGrid.Padding = new Padding(4, 2, 4, 4);
-        _basicsGrid.RowCount = 3;
+        _basicsGrid.RowCount = 4;
+        _basicsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
         _basicsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
         _basicsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
         _basicsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 96F));
-        _basicsGrid.Size = new Size(910, 192);
+        _basicsGrid.Size = new Size(910, 240);
         _basicsGrid.TabIndex = 1;
         //
         // _nameLabel
@@ -209,12 +215,35 @@ partial class ConnectionEditorForm
         _favoriteSwitch.Size = new Size(60, 32);
         _favoriteSwitch.TabIndex = 9;
         //
+        // _sortOrderLabel
+        //
+        _sortOrderLabel.Dock = DockStyle.Fill;
+        _sortOrderLabel.Margin = new Padding(8, 5, 4, 5);
+        _sortOrderLabel.Name = "_sortOrderLabel";
+        _sortOrderLabel.TabIndex = 10;
+        _sortOrderLabel.Text = "排序号 / Sort order";
+        _sortOrderLabel.TextAlign = ContentAlignment.MiddleLeft;
+        //
+        // _sortOrderInput
+        //
+        _sortOrderInput.AccessibleDescription = "收藏优先；排序号越小越靠前，支持负数，默认 0。 / Favorites first; lower values appear first. Negative values are allowed. Default: 0.";
+        _sortOrderInput.DecimalPlaces = 0;
+        _sortOrderInput.Dock = DockStyle.Fill;
+        _sortOrderInput.Margin = new Padding(4, 5, 10, 5);
+        _sortOrderInput.Maximum = int.MaxValue;
+        _sortOrderInput.Minimum = int.MinValue;
+        _sortOrderInput.Name = "_sortOrderInput";
+        _sortOrderInput.Radius = 8;
+        _sortOrderInput.ShowControl = true;
+        _sortOrderInput.TabIndex = 11;
+        _sortOrderInput.WheelModifyEnabled = false;
+        //
         // _notesLabel
         //
         _notesLabel.Dock = DockStyle.Fill;
         _notesLabel.Margin = new Padding(8, 5, 4, 5);
         _notesLabel.Name = "_notesLabel";
-        _notesLabel.TabIndex = 10;
+        _notesLabel.TabIndex = 12;
         _notesLabel.Text = "备注 / Notes";
         _notesLabel.TextAlign = ContentAlignment.MiddleLeft;
         //
@@ -228,7 +257,7 @@ partial class ConnectionEditorForm
         _notesInput.Name = "_notesInput";
         _notesInput.PlaceholderText = "连接备注 / Connection notes";
         _notesInput.Radius = 8;
-        _notesInput.TabIndex = 11;
+        _notesInput.TabIndex = 13;
         //
         // _advancedSection
         //
@@ -438,6 +467,7 @@ partial class ConnectionEditorForm
         ResumeLayout(false);
     }
 
+    private ToolTip _toolTip = null!;
     private AntdUI.Panel _basicsSection = null!;
     private AntdUI.Label _basicsTitle = null!;
     private ResponsiveFieldGrid _basicsGrid = null!;
@@ -451,6 +481,8 @@ partial class ConnectionEditorForm
     private AntdUI.DatePicker _expiresPicker = null!;
     private AntdUI.Label _favoriteLabel = null!;
     private AntdUI.Switch _favoriteSwitch = null!;
+    private AntdUI.Label _sortOrderLabel = null!;
+    private AntdUI.InputNumber _sortOrderInput = null!;
     private AntdUI.Label _notesLabel = null!;
     private AntdUI.Input _notesInput = null!;
     private AntdUI.Panel _advancedSection = null!;

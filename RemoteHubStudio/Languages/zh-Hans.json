@@ -74,6 +74,8 @@
     "ConnectionEditorForm._privateKeyInput.PlaceholderText": "可选的私钥文件",
     "ConnectionEditorForm._privateKeyLabel.Text": "私钥路径",
     "ConnectionEditorForm._saveButton.Text": "保存",
+    "ConnectionEditorForm._sortOrderInput.AccessibleDescription": "收藏优先；排序号越小越靠前，支持负数，默认 0。",
+    "ConnectionEditorForm._sortOrderLabel.Text": "排序号",
     "ConnectionEditorForm._typeLabel.Text": "客户端",
     "ConnectionEditorForm._typeSelect.PlaceholderText": "选择客户端",
     "ConnectionEndpoint.AccessPassword": "访问密码",

@@ -44,6 +44,9 @@ public sealed class ConnectionProfile
     /// <summary>Gets or sets whether the connection is a favorite. / 获取或设置连接是否为收藏。</summary>
     public bool IsFavorite { get; set; }
 
+    /// <summary>Gets or sets the user-defined display order, defaulting to zero. / 获取或设置用户定义的显示顺序，默认为零。</summary>
+    public int SortOrder { get; set; }
+
     /// <summary>Gets or sets a profile-specific executable override. / 获取或设置配置专属的可执行文件覆盖路径。</summary>
     public string ExecutableOverride { get; set; } = string.Empty;
 

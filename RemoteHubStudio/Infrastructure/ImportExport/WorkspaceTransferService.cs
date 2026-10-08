@@ -222,7 +222,7 @@ public sealed class WorkspaceTransferService
         Dictionary<Guid, string> groupNames = document.Groups.ToDictionary(group => group.Id, group => group.Name);
         List<IReadOnlyList<string?>> rows =
         [
-            ["Name", "Group", "Type", "Protocol", "Host", "Port", "Username", "Password", "PrivateKeyPath", "ExpiresOn", "Notes", "Favorite", "Executable", "Arguments", CsvFormatHeader, CsvOptionsHeader, CsvRdpOptionsHeader]
+            ["Name", "Group", "Type", "Protocol", "Host", "Port", "Username", "Password", "PrivateKeyPath", "ExpiresOn", "Notes", "Favorite", "Executable", "Arguments", CsvFormatHeader, CsvOptionsHeader, CsvRdpOptionsHeader, "SortOrder"]
         ];
 
         foreach (ConnectionProfile profile in document.Connections)
@@ -249,7 +249,8 @@ public sealed class WorkspaceTransferService
                     : string.Empty,
                 HasNonDefaultRdpOptions(profile.Rdp)
                     ? JsonSerializer.Serialize(profile.Rdp, _compactJsonOptions)
-                    : string.Empty
+                    : string.Empty,
+                profile.SortOrder.ToString(CultureInfo.InvariantCulture)
             ];
             rows.Add(exportedRow.Select(ProtectSpreadsheetFormula).ToArray());
         }
@@ -388,6 +389,7 @@ public sealed class WorkspaceTransferService
                     ExpiresOn = ParseDate(ReadValue(row, header, "ExpiresOn", "到期时间")),
                     Notes = ReadPreservedValue(row, header, "Notes", "服务器备注", "备注"),
                     IsFavorite = bool.TryParse(ReadValue(row, header, "Favorite"), out bool favorite) && favorite,
+                    SortOrder = ParseSortOrder(ReadValue(row, header, "SortOrder", "排序号", "排序")),
                     ExecutableOverride = ReadValue(row, header, "Executable"),
                     CustomArguments = customArguments,
                     Options = supportsExtendedOptions
@@ -661,6 +663,26 @@ public sealed class WorkspaceTransferService
         }
 
         return port;
+    }
+
+    /// <summary>
+    /// Parses an optional display order, defaulting to zero for older files. / 解析可选的显示顺序，旧文件中缺失时默认为零。
+    /// </summary>
+    /// <param name="value">Imported display-order text. / 导入的显示顺序文本。</param>
+    /// <returns>Validated display order. / 验证后的显示顺序。</returns>
+    private static int ParseSortOrder(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return 0;
+        }
+
+        if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int sortOrder))
+        {
+            throw new FormatException($"Invalid sort order '{value}'. / 排序号“{value}”无效。");
+        }
+
+        return sortOrder;
     }
 
     /// <summary>

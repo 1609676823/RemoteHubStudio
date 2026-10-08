@@ -74,10 +74,10 @@ The default produces four ZIPs; `both` produces seven. Remove unwanted architect
 Example default assets:
 
 ```text
-RemoteHubStudio-v0.1.0-nightly-win-x86-self-contained.zip
-RemoteHubStudio-v0.1.0-nightly-win-x64-self-contained.zip
-RemoteHubStudio-v0.1.0-nightly-win-arm64-self-contained.zip
-RemoteHubStudio-v0.1.0-nightly-win-portable-framework-dependent.zip
+RemoteHubStudio-v0.1.1-nightly-win-x86-self-contained.zip
+RemoteHubStudio-v0.1.1-nightly-win-x64-self-contained.zip
+RemoteHubStudio-v0.1.1-nightly-win-arm64-self-contained.zip
+RemoteHubStudio-v0.1.1-nightly-win-portable-framework-dependent.zip
 SHA256SUMS.txt
 ```
 
@@ -86,7 +86,7 @@ RID-specific framework-dependent assets end in `-framework-dependent.zip`. Each 
 Every stable and nightly ZIP produced by scheduled, manual, or forced workflows contains one top-level folder named `RemoteHubStudio`, across all architectures and deployment modes. Archive filenames still include the version, architecture, and deployment mode. Open the extracted `RemoteHubStudio` folder to run the EXE or portable CMD launcher. To upgrade, exit the application, replace the files in your local application folder, and preserve its `data` directory. For example:
 
 ```text
-RemoteHubStudio-v0.1.0-nightly-win-x64-self-contained.zip
+RemoteHubStudio-v0.1.1-nightly-win-x64-self-contained.zip
 └── RemoteHubStudio/
     ├── RemoteHubStudio.exe
     ├── RemoteHubStudio.dll
@@ -105,7 +105,7 @@ Use Windows, PowerShell 7, and the .NET 10 SDK. From the repository root, run re
 
 ```powershell
 dotnet run --project .\RemoteHubStudio.Tests\RemoteHubStudio.Tests.csproj -c Release
-.\.github\scripts\package-release.ps1 -DeploymentMode both -ReleaseTag v0.1.0-nightly -Version 0.1.0-nightly.1.1 -Channel nightly -SourceCommit (git rev-parse HEAD) -OutputDirectory artifacts/local-packages
+.\.github\scripts\package-release.ps1 -DeploymentMode both -ReleaseTag v0.1.1-nightly -Version 0.1.1-nightly.1.1 -Channel nightly -SourceCommit (git rev-parse HEAD) -OutputDirectory artifacts/local-packages
 ```
 
 The script generates files only and never calls GitHub publication APIs. Use a fresh output directory for each local verification. Its SHA256 manifest identifies the packages from the current invocation. Specify deployment options explicitly when publishing through Visual Studio or the CLI to match Actions.

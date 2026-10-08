@@ -1202,6 +1202,7 @@ public sealed class WorkspaceService
             ExpiresOn = source.ExpiresOn,
             Notes = source.Notes ?? string.Empty,
             IsFavorite = source.IsFavorite,
+            SortOrder = source.SortOrder,
             ExecutableOverride = source.ExecutableOverride ?? string.Empty,
             CustomArguments = source.CustomArguments ?? string.Empty,
             Rdp = CloneRdpOptions(source.Rdp),

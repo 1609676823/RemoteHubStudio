@@ -31,6 +31,8 @@ public sealed partial class ConnectionEditorForm : ResponsiveDialogWindow
 
         InitializeComponent();
         L.Apply(this);
+        _toolTip.SetToolTip(_sortOrderInput, _sortOrderInput.AccessibleDescription);
+        _toolTip.SetToolTip(_sortOrderLabel, _sortOrderInput.AccessibleDescription);
         RegisterDesignerLayout();
         _typePages.Add(ConnectionType.RemoteDesktop, _rdpPage);
         _typeSections.Add(ConnectionType.RemoteDesktop, _rdpSection);
@@ -101,6 +103,7 @@ public sealed partial class ConnectionEditorForm : ResponsiveDialogWindow
         _basicsGrid.RegisterField(_groupLabel, _groupSelect);
         _basicsGrid.RegisterField(_expiresLabel, _expiresPicker);
         _basicsGrid.RegisterField(_favoriteLabel, _favoriteSwitch);
+        _basicsGrid.RegisterField(_sortOrderLabel, _sortOrderInput);
         _basicsGrid.RegisterField(_notesLabel, _notesInput);
 
         _clientGrid.RegisterField(_privateKeyLabel, _privateKeyInput);
@@ -248,6 +251,7 @@ public sealed partial class ConnectionEditorForm : ResponsiveDialogWindow
         _groupSelect.SelectedValue = _workingCopy.GroupId;
         _expiresPicker.Value = _workingCopy.ExpiresOn;
         _favoriteSwitch.Checked = _workingCopy.IsFavorite;
+        _sortOrderInput.Value = _workingCopy.SortOrder;
         _notesInput.Text = _workingCopy.Notes;
         _privateKeyInput.Text = _workingCopy.PrivateKeyPath;
         _executableInput.Text = _workingCopy.ExecutableOverride;
@@ -434,6 +438,7 @@ public sealed partial class ConnectionEditorForm : ResponsiveDialogWindow
             ExpiresOn = _expiresPicker.Value?.Date,
             Notes = _notesInput.Text,
             IsFavorite = _favoriteSwitch.Checked,
+            SortOrder = (int)_sortOrderInput.Value,
             ExecutableOverride = _executableInput.Text.Trim(),
             CustomArguments = _argumentsInput.Text,
             Rdp = CloneRdpOptions(_workingCopy.Rdp),
@@ -471,6 +476,7 @@ public sealed partial class ConnectionEditorForm : ResponsiveDialogWindow
             ExpiresOn = source.ExpiresOn,
             Notes = source.Notes,
             IsFavorite = source.IsFavorite,
+            SortOrder = source.SortOrder,
             ExecutableOverride = source.ExecutableOverride,
             CustomArguments = source.CustomArguments,
             Rdp = CloneRdpOptions(source.Rdp),
@@ -594,5 +600,16 @@ public sealed partial class ConnectionEditorForm : ResponsiveDialogWindow
     {
         Result = null;
         CompleteDialog(DialogResult.Cancel);
+    }
+
+    /// <summary>Releases the editor's tooltip component. / 释放编辑器的工具提示组件。</summary>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _toolTip?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }

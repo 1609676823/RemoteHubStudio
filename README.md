@@ -40,6 +40,7 @@ On first launch, open **Settings → External clients** and select the executabl
 
 - Manage connections and nested groups in one workspace. A connection can store its applicable username and password, favorite state, expiration date, notes, private key, executable override, custom arguments, RDP settings, and client-specific options.
 - Search by name, address, type, or notes; filter by client, group, favorites, or expiration state; and perform multi-row status checks or deletion.
+- Set a numeric sort order in the connection editor. Connections appear with favorites first, then by ascending sort order and name. Negative values are supported; older configurations or imports without a sort order default to `0`, preserving the default ordering of legacy data.
 - Add saved connections or use **Quick connect** without adding a profile to the workspace.
 - Use a shared connection-editor shell with a dedicated options page for each of the 12 connection types. Protocol, target, port, authentication, and advanced fields adapt to the selected client and mode.
 - Show username and password fields only when the selected client mode uses them. Radmin, RealVNC, and the Telnet modes of PuTTY, SecureCRT, and MobaXterm hide and clear authentication values that do not apply.
@@ -108,7 +109,7 @@ When a target contains `?key=`, RemoteHubStudio omits automatic password passing
 - Windows Forms targeting `.NET 10` (`net10.0-windows7.0`). RemoteHubStudio is Windows-only; RDP launching and optional DPAPI protection depend on Windows.
 - AntdUI `2.4.8`, with system, light, and dark themes.
 - Per-Monitor V2 high-DPI mode. Dialogs and field grids adapt their columns and scrollable areas to the available width.
-- The common connection form contains only name, client, group, expiration date, favorite state, and notes. A distinct `ConnectionTypeOptionsPage` subclass for each client owns its protocol or mode, endpoint, authentication, and dedicated settings. Fixed single-protocol clients such as RDP and ToDesk do not show a redundant protocol selector.
+- The common connection form contains only name, client, group, expiration date, favorite state, sort order, and notes. A distinct `ConnectionTypeOptionsPage` subclass for each client owns its protocol or mode, endpoint, authentication, and dedicated settings. Fixed single-protocol clients such as RDP and ToDesk do not show a redundant protocol selector.
 
 The source tree is organized by responsibility:
 
@@ -211,7 +212,7 @@ The [Daily Releases (Scheduled) workflow](.github/workflows/daily-release.yml) i
 | Scheduled parent | [Daily Releases (Scheduled)](.github/workflows/daily-release.yml) | Daily at **00:00 Asia/Shanghai / 16:00 UTC on the previous day** | Runs both publication children concurrently using repository defaults |
 | Manual parent | [All Releases (Manual)](.github/workflows/all-releases.yml) | Manual | Runs both publication children concurrently with the selected deployment mode |
 | Force rebuild and publish | [Force Build and Release (Manual)](.github/workflows/force-build.yml) | Manual only; choose `nightly`, `stable`, or `both` (default) | Rebuilds the default branch and replaces Release assets, build notes, and source tags, including already-published stable versions |
-| Daily preview | [Nightly Release](.github/workflows/nightly-release.yml) | Parent call or manual | Updates a fixed preview tag such as `v0.1.0-nightly` and replaces its assets |
+| Daily preview | [Nightly Release](.github/workflows/nightly-release.yml) | Parent call or manual | Updates a fixed preview tag such as `v0.1.1-nightly` and replaces its assets |
 | Stable | [Stable Release](.github/workflows/release.yml) | Parent call, manual, or `vX.Y.Z` tag push | Builds and publishes a missing version; skips a published version |
 | Build and test only | [Build Release Package](.github/workflows/build-release.yml) | Publication child call or manual choice of `nightly` / `stable` | Uploads an Actions artifact without creating a tag or Release |
 
@@ -223,20 +224,20 @@ Both publication children share the build and test workflow and [publishing scri
 
 All manual entry points expose **deployment-mode**: `repository-default`, `self-contained`, `framework-dependent`, or `both`. Scheduled and tag builds read the commented [release-settings.psd1](.github/release-settings.psd1), defaulting to self-contained RID packages plus a portable package. Portable DLLs always require the framework, and this WinForms app does not support Linux/macOS. See [deployment documentation](docs/DEPLOYMENT.md) for configuration, Windows compatibility, tradeoffs, and local commands. Normal publications preserve stable assets; use a new version or the explicit force-publication entry point to publish new targets/modes.
 
-**Previews:** build the default branch (currently `master`), even without new commits. To run manually, choose the default branch under **Actions → Nightly Release → Run workflow**. The base version comes from `<Version>` in `Directory.Build.props`: `0.1.0` uses `v0.1.0-nightly`; changing it to `0.2.0` starts `v0.2.0-nightly` and leaves the old preview at its last build.
+**Previews:** build the default branch (currently `master`), even without new commits. To run manually, choose the default branch under **Actions → Nightly Release → Run workflow**. The base version comes from `<Version>` in `Directory.Build.props`: `0.1.1` uses `v0.1.1-nightly`; changing it to `0.2.0` starts `v0.2.0-nightly` and leaves the old preview at its last build.
 
-Tags and asset names contain neither dates nor build numbers. For example, `RemoteHubStudio-v0.1.0-nightly-win-x64-self-contained.zip` keeps a consistent download URL. The embedded application version includes the run number and attempt (such as `0.1.0-nightly.12.1`), and release notes record the timestamp, source commit, and workflow link. Each successful update moves the preview tag to the exact commit built so its source matches the binary.
+Tags and asset names contain neither dates nor build numbers. For example, `RemoteHubStudio-v0.1.1-nightly-win-x64-self-contained.zip` keeps a consistent download URL. The embedded application version includes the run number and attempt (such as `0.1.1-nightly.12.1`), and release notes record the timestamp, source commit, and workflow link. Each successful update moves the preview tag to the exact commit built so its source matches the binary.
 
-**Normal stable releases:** scheduled and ordinary manual runs read `<Version>` from the default branch. For `0.1.0`, an already published `v0.1.0` skips both building and publishing. Otherwise, the workflow builds and tests, then creates the missing tag and stable Release. If the tag already exists without a published release, its original commit is built and the stable tag is not moved. Prerelease versions such as `0.2.0-beta.1` skip stable publication while previews continue. Force Build and Release is the explicit manual exception described above.
+**Normal stable releases:** scheduled and ordinary manual runs read `<Version>` from the default branch. For `0.1.1`, an already published `v0.1.1` skips both building and publishing. Otherwise, the workflow builds and tests, then creates the missing tag and stable Release. If the tag already exists without a published release, its original commit is built and the stable tag is not moved. Prerelease versions such as `0.2.0-beta.1` skip stable publication while previews continue. Force Build and Release is the explicit manual exception described above.
 
 Consequently, **bumping `<Version>` to a new plain three-part version automatically publishes it on the next parent run**. During development, use a prerelease version such as `0.2.0-beta.1`, then change it to `0.2.0` when ready for a stable release. Pushing a stable tag still supports selecting a specific release commit:
 
 ```powershell
-git tag -a v0.1.0 -m "Release 0.1.0"
-git push https://github.com/1609676823/RemoteHubStudio.git v0.1.0
+git tag -a v0.1.1 -m "Release 0.1.1"
+git push https://github.com/1609676823/RemoteHubStudio.git v0.1.1
 ```
 
-Tag-triggered releases require `vX.Y.Z` to match that commit's source version exactly; `v0.1.0-nightly` cannot trigger stable publication. The selected source commit and version are checked again before building to keep source, tags, and binaries consistent. Failed releases can be retried; normal publications preserve already published stable assets. Increment `<Version>` when beginning the next version to switch daily builds to its preview tag.
+Tag-triggered releases require `vX.Y.Z` to match that commit's source version exactly; `v0.1.1-nightly` cannot trigger stable publication. The selected source commit and version are checked again before building to keep source, tags, and binaries consistent. Failed releases can be retried; normal publications preserve already published stable assets. Increment `<Version>` when beginning the next version to switch daily builds to its preview tag.
 
 Build or test failures leave published releases untouched. During preview or forced stable replacement, the release temporarily becomes a draft and is published after all assets and the tag are updated. An interrupted upload leaves a draft that can be resumed by rerunning the failed publication job. API, checksum, upload, or tag-update errors fail the run. Immutable Releases cannot be replaced. Actions artifacts are kept for 7 days; Releases retain the latest preview for each version and all stable versions. Date-based tags created by the earlier workflow are not automatically deleted.
 
@@ -252,7 +253,7 @@ The product name, version, authors, company, description, repository, project, r
 
 This uses the standard .NET SDK build configuration mechanism: a single project can put these properties directly in its `.csproj`; this repository shares them between the application and tests through the automatically imported `Directory.Build.props`. `Program.cs` handles startup, while application code uses the read-only [`ProductInfo`](RemoteHubStudio/Configuration/ProductInfo.cs) accessor to read the application's own assembly, independently of test or designer entry assemblies.
 
-- For a release, update only `<Version>` (currently `0.1.0`; prereleases such as `0.2.0-beta.1` are supported). The SDK derives numeric `AssemblyVersion` and `FileVersion` values and the full `InformationalVersion`. The About dialog uses `ProductInfo.Version`, which retains prerelease labels and omits build metadata after `+`; `ProductInfo.InformationalVersion` preserves the full version and any SDK-appended Git commit for diagnostics.
+- For a release, update only `<Version>` (currently `0.1.1`; prereleases such as `0.2.0-beta.1` are supported). The SDK derives numeric `AssemblyVersion` and `FileVersion` values and the full `InformationalVersion`. The About dialog uses `ProductInfo.Version`, which retains prerelease labels and omits build metadata after `+`; `ProductInfo.InformationalVersion` preserves the full version and any SDK-appended Git commit for diagnostics.
 - Changing `<RepositoryUrl>` updates the default project, issues, releases, and license URLs. To use separate destinations, edit `PackageProjectUrl`, `IssuesUrl`, `PackageReleaseNotes`, or `LicenseUrl`.
 - Changing `<Authors>` updates the default publisher and copyright author; `Company`, `Copyright`, `Description`, and `PackageLicenseExpression` can also be configured separately. The SDK generates standard attributes, and `AssemblyMetadata` embeds the remaining information.
 - About previews in the designer and language packs use placeholders; runtime values come from the assembly, so versions, copyright, and links do not need to be maintained in C# or translations. Data-directory, workspace-format, and single-instance identifiers remain compatibility constants in code.
